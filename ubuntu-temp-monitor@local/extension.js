@@ -10,7 +10,7 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 const REFRESH_INTERVAL_MS = 2000;
 const PLACEHOLDER = '--';
-const CORE_COUNT = 6;
+const LOGICAL_CPU_COUNT = GLib.get_num_processors();
 
 function temperatureClass(temperature) {
     if (temperature === null)
@@ -28,6 +28,18 @@ function temperatureClass(temperature) {
 
 function compactTemperature(temperature) {
     return temperature === null ? PLACEHOLDER : `${temperature}°C`;
+}
+
+function loadClass(load) {
+    if (load === null)
+        return 'temp-monitor-neutral';
+    if (load >= 75)
+        return 'temp-monitor-critical';
+    if (load >= 50)
+        return 'temp-monitor-warm';
+    if (load >= 25)
+        return 'temp-monitor-mild';
+    return 'temp-monitor-cool';
 }
 
 function summaryTemperature(name, temperature) {
@@ -93,6 +105,60 @@ async function readGpuTemperature() {
     return temperature === undefined ? null : Math.round(temperature);
 }
 
+function parseCpuTimes(contents) {
+    const rows = new TextDecoder().decode(contents).split('\n');
+    const cpuTimes = new Map();
+
+    for (const row of rows) {
+        const match = row.match(/^cpu(\d+)\s+(.+)$/);
+        if (!match)
+            continue;
+
+        const values = match[2].trim().split(/\s+/).map(Number);
+        if (values.some(value => !Number.isFinite(value)))
+            continue;
+
+        const total = values.reduce((sum, value) => sum + value, 0);
+        const idle = (values[3] ?? 0) + (values[4] ?? 0);
+        cpuTimes.set(Number(match[1]), {total, idle});
+    }
+
+    return cpuTimes;
+}
+
+function readCpuTimes() {
+    return new Promise(resolve => {
+        const file = Gio.File.new_for_path('/proc/stat');
+        file.load_contents_async(null, (source, result) => {
+            try {
+                const [ok, contents] = source.load_contents_finish(result);
+                resolve(ok ? parseCpuTimes(contents) : null);
+            } catch (_error) {
+                resolve(null);
+            }
+        });
+    });
+}
+
+function calculateCpuLoads(previousTimes, currentTimes) {
+    if (!currentTimes)
+        return Array(LOGICAL_CPU_COUNT).fill(null);
+
+    return Array.from({length: LOGICAL_CPU_COUNT}, (_, index) => {
+        const previous = previousTimes?.get(index);
+        const current = currentTimes.get(index);
+        if (!previous || !current)
+            return null;
+
+        const totalDelta = current.total - previous.total;
+        const idleDelta = current.idle - previous.idle;
+        if (totalDelta <= 0)
+            return null;
+
+        return Math.round(Math.min(100, Math.max(0, (1 - idleDelta / totalDelta) * 100)));
+    });
+}
+
 const TemperatureIndicator = GObject.registerClass(
 class TemperatureIndicator extends PanelMenu.Button {
     _init() {
@@ -104,7 +170,7 @@ class TemperatureIndicator extends PanelMenu.Button {
         });
         this.add_child(this._content);
 
-        this._coreTiles = Array.from({length: CORE_COUNT}, () => {
+        this._coreTiles = Array.from({length: LOGICAL_CPU_COUNT}, (_, index) => {
             const tile = new St.Label({
                 text: PLACEHOLDER,
                 style_class: 'temp-monitor-core temp-monitor-neutral',
@@ -128,17 +194,20 @@ class TemperatureIndicator extends PanelMenu.Button {
         this._content.add_child(this._gpuTile);
     }
 
-    setTemperatures(cpuTemperature, gpuTemperature) {
-        for (const tile of this._coreTiles)
-            this._setTile(tile, 'temp-monitor-core', compactTemperature(cpuTemperature), cpuTemperature);
+    setReadings(cpuTemperature, gpuTemperature, cpuLoads) {
+        for (const [index, tile] of this._coreTiles.entries()) {
+            const load = cpuLoads[index] ?? null;
+            tile.set_text(load === null ? PLACEHOLDER : `${load}`);
+            tile.set_style_class_name(`temp-monitor-core ${loadClass(load)}`);
+        }
 
-        this._setTile(
+        this._setTemperatureTile(
             this._cpuTile,
             'temp-monitor-summary temp-monitor-cpu',
             summaryTemperature('CPU', cpuTemperature),
             cpuTemperature
         );
-        this._setTile(
+        this._setTemperatureTile(
             this._gpuTile,
             'temp-monitor-summary temp-monitor-gpu',
             summaryTemperature('GPU', gpuTemperature),
@@ -146,7 +215,7 @@ class TemperatureIndicator extends PanelMenu.Button {
         );
     }
 
-    _setTile(tile, baseClass, text, temperature) {
+    _setTemperatureTile(tile, baseClass, text, temperature) {
         tile.set_text(text);
         tile.set_style_class_name(`${baseClass} ${temperatureClass(temperature)}`);
     }
@@ -155,6 +224,7 @@ class TemperatureIndicator extends PanelMenu.Button {
 export default class UbuntuTempMonitorExtension extends Extension {
     enable() {
         this._indicator = new TemperatureIndicator();
+        this._previousCpuTimes = null;
         this._timeoutId = null;
         Main.panel.addToStatusArea(this.uuid, this._indicator);
         void this._refresh();
@@ -168,18 +238,22 @@ export default class UbuntuTempMonitorExtension extends Extension {
 
         this._indicator?.destroy();
         this._indicator = null;
+        this._previousCpuTimes = null;
     }
 
     async _refresh() {
-        const [cpuTemperature, gpuTemperature] = await Promise.all([
+        const [cpuTemperature, gpuTemperature, currentCpuTimes] = await Promise.all([
             readCpuTemperature(),
             readGpuTemperature(),
+            readCpuTimes(),
         ]);
 
         if (!this._indicator)
             return;
 
-        this._indicator.setTemperatures(cpuTemperature, gpuTemperature);
+        const cpuLoads = calculateCpuLoads(this._previousCpuTimes, currentCpuTimes);
+        this._previousCpuTimes = currentCpuTimes;
+        this._indicator.setReadings(cpuTemperature, gpuTemperature, cpuLoads);
         this._timeoutId = GLib.timeout_add(
             GLib.PRIORITY_DEFAULT,
             REFRESH_INTERVAL_MS,

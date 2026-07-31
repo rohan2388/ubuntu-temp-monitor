@@ -1,6 +1,6 @@
 # Ubuntu Temperature Monitor
 
-A compact GNOME Shell 46 heat dashboard for the top bar. It shows six CPU tiles, a CPU summary tile, and an NVIDIA GPU summary tile.
+A compact GNOME Shell 46 dashboard for the top bar. It shows twelve logical CPU load tiles, a CPU temperature summary tile, and an NVIDIA GPU temperature summary tile.
 
 ## Requirements
 
@@ -8,7 +8,7 @@ A compact GNOME Shell 46 heat dashboard for the top bar. It shows six CPU tiles,
 - `lm-sensors` (`sensors -j`)
 - NVIDIA driver utilities (`nvidia-smi`)
 
-The current implementation reads the AMD Ryzen `k10temp` `Tctl` sensor and the first NVIDIA GPU reported by `nvidia-smi`. `k10temp` exposes package temperature only, so all six CPU tiles display the same reliable package reading.
+The current implementation reads logical CPU utilization from `/proc/stat`, AMD Ryzen `k10temp` `Tctl`, and the first NVIDIA GPU reported by `nvidia-smi`. The twelve small tiles correspond to Linux logical CPUs and show load values without a percent glyph. `k10temp` exposes package temperature only, which is displayed in the CPU summary tile.
 
 Temperature colors progress from green to red: green below 55°C, amber at 55-69°C, orange at 70-79°C, deep orange at 80-89°C, and red at 90°C or higher.
 

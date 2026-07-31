@@ -18,7 +18,9 @@
 }
 
 .temp-monitor-core {
-    min-width: 30px;
+    min-width: 17px;
+    padding: 3px 1px 0;
+    font-size: 9px;
 }
 
 .temp-monitor-summary {
