@@ -1,5 +1,6 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -68,9 +69,10 @@ async function readGpuTemperature() {
     return temperature === undefined ? null : Math.round(temperature);
 }
 
+const TemperatureIndicator = GObject.registerClass(
 class TemperatureIndicator extends PanelMenu.Button {
-    constructor() {
-        super(0.0, 'Ubuntu Temperature Monitor');
+    _init() {
+        super._init(0.0, 'Ubuntu Temperature Monitor');
 
         this._label = new St.Label({
             text: `CPU ${PLACEHOLDER}°C | GPU ${PLACEHOLDER}°C`,
@@ -83,7 +85,7 @@ class TemperatureIndicator extends PanelMenu.Button {
         const gpu = gpuTemperature ?? PLACEHOLDER;
         this._label.set_text(`CPU ${cpu}°C | GPU ${gpu}°C`);
     }
-}
+});
 
 export default class UbuntuTempMonitorExtension extends Extension {
     enable() {
