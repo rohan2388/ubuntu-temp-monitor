@@ -11,6 +11,7 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 const REFRESH_INTERVAL_MS = 2000;
 const PLACEHOLDER = '--';
 const LOGICAL_CPU_COUNT = GLib.get_num_processors();
+const TILES_PER_ROW = 6;
 
 function temperatureClass(temperature) {
     if (temperature === null)
@@ -170,13 +171,29 @@ class TemperatureIndicator extends PanelMenu.Button {
         });
         this.add_child(this._content);
 
+        this._coreGrid = new St.BoxLayout({
+            style_class: 'temp-monitor-core-grid',
+            vertical: true,
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        this._content.add_child(this._coreGrid);
+
+        const coreRows = [];
         this._coreTiles = Array.from({length: LOGICAL_CPU_COUNT}, (_, index) => {
+            const rowIndex = Math.floor(index / TILES_PER_ROW);
+            if (!coreRows[rowIndex]) {
+                coreRows[rowIndex] = new St.BoxLayout({
+                    style_class: 'temp-monitor-core-row',
+                });
+                this._coreGrid.add_child(coreRows[rowIndex]);
+            }
+
             const tile = new St.Label({
                 text: PLACEHOLDER,
                 style_class: 'temp-monitor-core temp-monitor-neutral',
                 y_align: Clutter.ActorAlign.CENTER,
             });
-            this._content.add_child(tile);
+            coreRows[rowIndex].add_child(tile);
             return tile;
         });
 
