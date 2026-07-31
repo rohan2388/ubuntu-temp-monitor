@@ -1,0 +1,65 @@
+.temp-monitor {
+    spacing: 3px;
+    padding: 0;
+}
+
+.temp-monitor-core,
+.temp-monitor-summary {
+    height: 16px;
+    min-height: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    padding: 3px 2px 0;
+    color: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+
+.temp-monitor-core {
+    min-width: 30px;
+}
+
+.temp-monitor-summary {
+    min-width: 54px;
+}
+
+.temp-monitor-cpu {
+    margin-left: 5px;
+    /*min-width: 54px;*/
+}
+
+.temp-monitor-gpu {
+    /*min-width: 54px;*/
+}
+
+.temp-monitor-neutral {
+    background-color: #48525f;
+    border-color: #677382;
+}
+
+.temp-monitor-cool {
+    background-color: #23794d;
+    border-color: #49b978;
+}
+
+.temp-monitor-mild {
+    background-color: #9c7417;
+    border-color: #dfb53c;
+}
+
+.temp-monitor-warm {
+    background-color: #b95d19;
+    border-color: #ee8c3a;
+}
+
+.temp-monitor-hot {
+    background-color: #c7461e;
+    border-color: #f06a38;
+}
+
+.temp-monitor-critical {
+    background-color: #a92f3c;
+    border-color: #ef596a;
+}

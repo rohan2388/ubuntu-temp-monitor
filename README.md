@@ -1,6 +1,6 @@
 # Ubuntu Temperature Monitor
 
-A minimal GNOME Shell 46 extension that shows AMD CPU and NVIDIA GPU temperatures in the top bar.
+A compact GNOME Shell 46 heat dashboard for the top bar. It shows six CPU tiles, a CPU summary tile, and an NVIDIA GPU summary tile.
 
 ## Requirements
 
@@ -8,7 +8,9 @@ A minimal GNOME Shell 46 extension that shows AMD CPU and NVIDIA GPU temperature
 - `lm-sensors` (`sensors -j`)
 - NVIDIA driver utilities (`nvidia-smi`)
 
-The current implementation reads the AMD Ryzen `k10temp` `Tctl` sensor and the first NVIDIA GPU reported by `nvidia-smi`.
+The current implementation reads the AMD Ryzen `k10temp` `Tctl` sensor and the first NVIDIA GPU reported by `nvidia-smi`. `k10temp` exposes package temperature only, so all six CPU tiles display the same reliable package reading.
+
+Temperature colors progress from green to red: green below 55°C, amber at 55-69°C, orange at 70-79°C, deep orange at 80-89°C, and red at 90°C or higher.
 
 ## Package
 
