@@ -12,6 +12,8 @@ The current implementation reads logical CPU utilization from `/proc/stat`, AMD 
 
 Temperature colors progress from green to red: green below 55°C, amber at 55-69°C, orange at 70-79°C, deep orange at 80-89°C, and red at 90°C or higher.
 
+Click the monitor to open GNOME System Monitor on its Resources tab.
+
 ## Package
 
 From this project directory:

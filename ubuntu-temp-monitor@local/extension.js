@@ -243,6 +243,21 @@ export default class UbuntuTempMonitorExtension extends Extension {
         this._indicator = new TemperatureIndicator();
         this._previousCpuTimes = null;
         this._timeoutId = null;
+        this._indicator.connect('button-press-event', (_actor, event) => {
+            if (event.get_button() !== 1)
+                return Clutter.EVENT_PROPAGATE;
+
+            try {
+                Gio.Subprocess.new(
+                    ['gnome-system-monitor', '--show-resources-tab'],
+                    Gio.SubprocessFlags.NONE
+                );
+            } catch (error) {
+                console.error(`Unable to open System Monitor: ${error.message}`);
+            }
+
+            return Clutter.EVENT_STOP;
+        });
         Main.panel.addToStatusArea(this.uuid, this._indicator);
         void this._refresh();
     }
