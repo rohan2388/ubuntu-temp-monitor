@@ -3,5 +3,5 @@
   "name": "Ubuntu Temperature Monitor",
   "description": "Shows CPU and NVIDIA GPU temperatures in the top bar.",
   "shell-version": ["46"],
-  "version": 11
+  "version": 13
 }

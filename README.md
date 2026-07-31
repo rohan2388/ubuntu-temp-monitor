@@ -1,6 +1,6 @@
 # Ubuntu Temperature Monitor
 
-A compact GNOME Shell 46 dashboard for the top bar. It shows twelve logical CPU load tiles, a CPU temperature summary tile, and an NVIDIA GPU temperature summary tile.
+A compact GNOME Shell 46 dashboard in the left side of the top bar. It shows twelve logical CPU load tiles, a CPU temperature summary tile, and an NVIDIA GPU temperature summary tile.
 
 ## Requirements
 

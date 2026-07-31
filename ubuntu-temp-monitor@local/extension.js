@@ -258,7 +258,7 @@ export default class UbuntuTempMonitorExtension extends Extension {
 
             return Clutter.EVENT_STOP;
         });
-        Main.panel.addToStatusArea(this.uuid, this._indicator);
+        Main.panel.addToStatusArea(this.uuid, this._indicator, 1, 'left');
         void this._refresh();
     }
 
